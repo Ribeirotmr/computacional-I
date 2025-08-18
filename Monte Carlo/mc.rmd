@@ -1,0 +1,206 @@
+---
+title: "Trabalho Monte Carlo"
+author: "Thierry Martins Ribeiro"
+date: "17/08/2025"
+graphics: yes
+output:
+  pdf_document:
+    keep_tex: true
+    latex_engine: xelatex
+header-includes:
+  - \usepackage[utf8]{inputenc}
+  - \usepackage{amsmath}
+  - \usepackage{amssymb}
+---
+
+# Algorítimo de Monte Carlo
+
+
+Seja $X$ uma variável aleatória que representa o resultado de interesse do experimento (por exemplo, vitória/derrota, número de tentativas, valor ganho, etc).
+
+O procedimento de Monte Carlo consiste em:
+
+Realizar $N$ simulações independentes do experimento, obtendo amostras $x_1, x_2, \dots, x_N$. 
+
+Calcular a média amostral: $$ \bar{X} = \frac{1}{N} \sum_{i=1}^{N} X_i $$
+$\bar{X}$ é uma estimativa para o valor esperado $\mathbb{E}[X]$.
+---
+
+# Questão 5 
+
+### Seja ${x_1, x_2, \dots, x_n}$ uma amostra aleatoria de variáveis aleatorias tal que $x_i \sim \mathcal{N}(\mu = 0, \sigma^2 = 1)$. Construa um procedimento de MC (Monte Carlo) para avaliar o estimador $\hat{\sigma}^2$ e $\hat{S^2}$, variância estimada e variância amostral respectivamente 
+
+$$
+\hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{H})^2 
+$$
+
+$$
+\hat{S}^2 = \frac{1}{n-1} \sum_{i=1}^{n} (x_i - \bar{H})^2 
+$$
+
+### $\textbf{Dica:}$ Para comparar, utilize uma aproximação do Erro Quadrático Medio (EQM) obtida por um procedimento de MC. Lembre-se se $\hat{\theta}$ é um estimador para $\theta$ então o $EQM(\hat{\theta}) = E[(\hat{\theta} - \theta)^2]$ 
+
+```{r}
+set.seed(123)
+
+mu <- 0
+sigma <- 1 
+
+n <- 100
+qtd_simulacao <- 100000
+
+estimador_de_sigma2 <- numeric(qtd_simulacao)
+estimador_de_s2 <- numeric(qtd_simulacao)
+
+for(i in 1:qtd_simulacao){
+    amostra_aleatoria <- rnorm(n, mean = 0, sd = sqrt(sigma)) 
+    media <- mean(amostra_aleatoria)
+    
+
+    estimador_de_sigma2[i] <- (mean(amostra_aleatoria - media)^2)
+    estimador_de_s2[i] <- sum((amostra_aleatoria)^2) / (n - 1)
+
+}
+
+
+
+
+EQM_estimador_sigma2 <- mean((estimador_de_s2 - sigma)^2)
+EQM_estimador_s2 <- mean((estimador_de_s2 - sigma)^2)
+
+cat("Estimador variacional com EQM: ", EQM_estimador_sigma2, "\n")
+cat("Estimador amostral com EQM: ", EQM_estimador_s2, "\n")
+
+```
+
+
+
+
+```{r}
+
+```
+
+# Questão 7
+
+### Walter está jogando um jogo com dois dados de 6 lados equiprováveis. O jogo consiste em lançar ambos os dados e caso a soma dos dados seja divisível por 3, ele ganhará, percendo em caso contrário. Realize um procedimento de MC para avaliar o jogo e responda a pergunta: Em média o jogo é favorável ao jogador? 
+
+```{r}
+set.seed(123)
+n <- 2 
+qtd_simulacao <- 2000
+
+vitoria_acumulada <- numeric(qtd_simulacao)
+vitoria <- 0
+
+for(i in 1:qtd_simulacao ) {
+    x_n <- sample(1:6, n, replace = T)
+    estimativa <- sum(x_n)
+
+    if(estimativa %% 3 == 0){
+        vitoria <- vitoria + 1
+    }
+    vitoria_acumulada[i] <- vitoria / i
+
+}
+
+probabiliada_de_vitoria <- vitoria / qtd_simulacao 
+cat("Estimativa de Ganhar:", probabiliada_de_vitoria, "\n")
+```
+
+```{r}
+plot(vitoria_acumulada, type = "l", col = "blue", lwd = 2,
+     xlab = "Número de simulações", ylab = "Proporção acumulada de vitórias",
+     main = "Convergência da estimativa de vitória (MC)")
+abline(h = 1/3, col = "red", lty = 2)
+legend("topright", legend = c("Estimativa MC", "Valor teórico 1/3"),
+       col = c("blue", "red"), lty = c(1,2), lwd = 2)
+```
+---
+
+# Quetão 8
+
+### Suponha que tenhamos uma urna com bolas de mesmo tamanho enumeradas de 1 à 100. Considere o experimento aleatório de retirar uma bola da urna e observar o seu número até obtermos a bola com número desejado. Nesse experimento, será considerado reposição, isto é, caso não tenha sido observado a numeração desejada, a bola será devolvida à urna. Implemente um procedimento de MC considerando 10 mil repetições desse experimento e obtenha a média das retiradas necessárias para obter-se o número desejado. Além disso, retorne uma aproximação da probabilidade de se obter o número desejado. Dica: considere o número 77 como o número desejado.
+
+```{r}
+set.seed(123)
+
+qtd_simulacao <- 10000
+numero_desejado <- 77
+qtd_bolas_totais <- 100
+
+retiradas <- numeric(qtd_simulacao)
+
+for (i in 1:qtd_simulacao) {
+  vezes <- 0
+  bola_retirada <- 0
+  
+  while (bola_retirada != numero_desejado) {
+    vezes <- vezes + 1
+    bola_retirada <- sample(1:qtd_bolas_totais, 1, replace = TRUE)
+  }
+  
+  retiradas[i] <- vezes
+}
+
+media_retiradas <- mean(retiradas)
+probabilidade_de_desejada_mc <- mean(retiradas == 1)
+
+cat("Media das bolas retiradas: ", media_retiradas, "\n")
+cat("Probabilidade do desejo: ", probabilidade_de_desejada_mc, "\n")
+```
+---
+
+# Questão 9 
+
+### Um dono de cassino estuda disponibilizar um novo jogo e solicita uma consultoria estatística para saber se o jogo será viável para o cassino, isto é, se o valor esperado em dólares do lucro obtido será positivo, em média. Realize uma simulação de MC considerando 100 mil jogos e obtenha o valor médio de lançamentos de um jogador bem como a probabilidade (aproximada) de um jogador jogar apenas uma única partida. Além disso, responda:Se um jogador paga \$10 dólares para jogar e lucra \$1,50 dólares por cada jogada, o jogo é rentável para o dono do cassino?
+
+### $\textbf{Regras do jogo: }$
+
+* Dois dados são lançados e caso a soma for 5, 6, 7, 8 ou 9 o jogo termina imediatamente;
+* Se nenhum dos resultamos acima for obtido, o jogador continua lançando ambos os dados até obter uma soma igual à 11 ou 12.
+
+```{r}
+set.seed(123) 
+
+qtd_dados <- 2
+qtd_simulacao <- 100000 
+vetor_vencedor <- c(5,6,7,8,9)
+vetor_perdeor <- c(11,12)
+
+qtd_lancamentos <- numeric(qtd_simulacao)
+terminou_em_uma_jogada <- 0
+
+for(i in 1:qtd_simulacao){
+    vezes_lancados <- 1
+    dados_lancados_soma <- sum(sample(1:6, qtd_dados, replace =T))
+
+    if(dados_lancados_soma %in% vetor_vencedor){
+        terminou_em_uma_jogada <- terminou_em_uma_jogada + 1
+        qtd_lancamentos[i] <- vezes_lancados
+        next
+    }
+    
+    while(!(dados_lancados_soma %in% vetor_vencedor)){
+        dados_lancados_soma <- sum(sample(1:6, qtd_dados, replace =T))
+        vezes_lancados <- vezes_lancados + 1
+    }
+
+    qtd_lancamentos[i] <- vezes_lancados
+}
+
+media_dos_lancamentos <- mean(qtd_lancamentos)
+probabilidade_de_uma_jogada <- terminou_em_uma_jogada / qtd_simulacao
+
+cat("média lançamento jogador:", media_dos_lancamentos, "\n")
+cat("probabilidade de terminar em uma jogada:", probabilidade_de_uma_jogada, "\n")
+
+lucro_cassino <- 10 - (1.5 * qtd_lancamentos)
+lucro_medio_cassino <- mean(lucro_cassino)
+
+cat("lucro medio do cassino por jogador: $", round(lucro_medio_cassino, 2), "\n")
+if(lucro_medio_cassino > 0){
+    cat("O jogo é rentável para o cassino.\n")
+} else {
+    cat("O jogo NÃO é rentável para o cassino.\n")
+}
+```

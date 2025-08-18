@@ -1,0 +1,116 @@
+---
+title: "Trabalho Variaveis Aleatórias"
+author: "Thierry Martins Ribeiro"
+date: "08/08/2025"
+graphics: yes
+output:
+  pdf_document:
+    keep_tex: true
+    latex_engine: xelatex
+header-includes:
+  - \usepackage[utf8]{inputenc}
+  - \usepackage{amsmath}
+  - \usepackage{amssymb}
+---
+
+# Questão 1 
+
+### Explique o que é um procedimento de Monte Carlo (MC)?
+---
+
+simulação/procedimento de monte carlo é um procedimento de moldar 
+probabilidades na qual a previsão e dificilmente vista ja que ha presença de variaveis aleatorias e tambem coompreender o impacto da incerteza e o impaco de uma aleatoriedade
+
+# Questão 2 
+
+###  Enuncie um procedimento de MC para o cálculo de uma integral de uma função contínua em um intervalo $[a,b]$ Depois, escreva um algoritmo para o procedimento enunciado.
+---
+
+seja $f(x)$ uma função contínua em que $N \in [a,b]$ com $N$ sendo número gerado aleatoriamente. Com isso o procedimento de Monte Carlo para o cálculo de uma integral se da por 
+
+$$
+{I} =  ∫_{a}^{b}f(x)dx 
+$$
+
+Passo a Passo que eu entendi:
+
+* Escolher o número de pontos $N$ 
+* Sortear $N$ valores {$x_1,x_2, \dots ,x_n$} no intervlo de $[a,b]$ 
+* Avaliar a Função $f(x_i)$ em cada ponto de $N$ sorteado
+* Calcular as médias de cada avaliação da fução 
+$$
+\bar{f} = \sum_{i=1}^{N}f(x_i) \textcircled{1}
+$$
+* E estimar a integral com 
+$$
+\hat{I} = (b-a) \cdot \bar{f} \textcircled{2}
+$$
+
+Logo $ \textcircled{1} + \textcircled{2}$
+$$\Downarrow$$
+$$
+\hat{I} = (b-a) \cdot \frac{1}{N} \cdot \sum_{i=1}^{N}f(x_i)
+$$
+
+### a seguir um exemplo para a função 
+$$
+f(x) = 500 * |sen(x)*cos(\sqrt{x}) + \log(x+1) * e^{\frac{-x}{20}}
+$$
+
+```{r}
+set.seed(123)
+n <- 10000 #Numero de pontos
+qtd_simulacao <- 10
+a <- 0.1
+b <- 50
+f <- function(x) 500 * abs(sin(x) * cos(sqrt(x)) + log(x + 1) * exp(-x/20))
+
+estimativa <- numeric(qtd_simulacao) 
+
+for(i in 1:qtd_simulacao) {
+    x_n <- runif(n, min = a, max = b)
+    estimativa[i] <- (b-a) * mean(f(x_n))
+}
+
+print(estimativa)
+```
+
+# Questão 3
+
+### Seja $\hat{I}$ o estimador ${I} =  ∫_{a}^{b}f(x)dx$ em que $f$ é uma função contínua no intervalo $[a,b]$ em que 
+$$
+\hat{I} = (b-a) \cdot \frac{1}{N} \cdot \sum_{i=1}^{N}f(x_i)
+$$
+### cuja a amostra é obtida pelo procedimento de MC enunciado no exercício anterior. Mostre que $\hat{I}$ é um estimado não-viesado e consiste para $I$
+
+```{r}
+set.seed(123)
+n <- 10000 #Numero de pontos
+qtd_simulacao <- 10
+a <- 0.1
+b <- 50
+f <- function(x) 500 * abs(sin(x) * cos(sqrt(x)) + log(x + 1) * exp(-x/20))
+
+estimativa_f1 <- numeric(qtd_simulacao)
+estimativa_i <- numeric(qtd_simulacao) 
+estimativa_f2
+
+
+for(i in 1:qtd_simulacao) {
+    x_n <- runif(n, min = a, max = b)
+    estimativa_f[i] <- integrate(f, lower = a, upper = b)$value
+    estimativa_i[i] <- (b-a) * mean(f(x_n))
+}
+
+cat("Estimativa F\n")
+print(estimativa_f)
+
+cat("Estimativa para I\n")
+print(estimativa_i)
+
+estimativaf2 <- integrate(f, lower = a, upper = b)$value
+cat("Estimativa sem x_n"\n)
+print(estimativaf2)
+```
+
+
