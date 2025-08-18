@@ -1,0 +1,221 @@
+---
+title: "Trabalho Variaveis Aleatórias"
+author: "Thierry Martins Ribeiro"
+date: "08/08/2025"
+graphics: yes
+output:
+  pdf_document:
+    keep_tex: true
+    latex_engine: xelatex
+header-includes:
+  - \usepackage[utf8]{inputenc}
+  - \usepackage{amsmath}
+  - \usepackage{amssymb}
+---
+
+# Questão 1
+
+### (4,0 pontos) (2.0 Pontos) A Lei dos Grandes Números (LGN) é um dos resultados mais importantes na teoria estatística. Tal resultado permite afirmar que a média amostral tende para a média populacional, quando o tamanho da amostra é suficientemente grande. Sugira um programa, em código R, que permita mostrar computacionalmente a LGN para valores pseudo-aleatórios de uma variável aleatória binomial com parâmetros n = 10 e p = 0.1.
+
+```{r}
+n <- 10
+p <- 0.1
+num_amostras <- 10000  
+
+quantidade_amostras <- rbinom(num_amostras, n, p)
+
+media_amostral <- cumsum(quantidade_amostras) / (1:num_amostras)
+
+
+media_populacional <- n * p
+
+print(paste("Média amostral final:", mean(quantidade_amostras)))
+print(paste("Média populacional:", media_populacional))
+
+
+plot(media_amostral, type = "l", col = "blue", lwd = 2,
+     xlab = "Número de amostras", ylab = "Média amostral",
+     main = "Lei dos Grandes Números para Binomial(n=10, p=0.1)")
+abline(h = media_populacional, col = "red", lwd = 2, lty = 2)
+legend("topright", legend = c("Média amostral", "Média populacional"),
+       col = c("blue", "red"), lty = c(1,2), lwd = 2)
+```
+
+# Questão 2
+
+### Seja X uma variável aleatória em um espaço de probabilidade (ohms, A, P) e suponha que X ∼ U(0, 1). Obtenha a distribuição de Y = − ln(X).
+
+### Questão 2.b
+
+-   A distribuição Gama de Y = -ln(X) onde X \~ U(0,1) é chamada de distribuição exponencial com parâmetro beta = 1. ,
+
+### Questão 2.c)
+
+```{r}
+set.seed(789) 
+
+n <- 6000
+
+alfa <- 1
+beta <- 3
+
+y <- rgamma(n, shape = alfa, scale = beta)
+
+
+hist(y, prob = TRUE, breaks = 30, ylim = c(0,0.3), 
+     main = "Distribuição Gama (alfa=1, beta=3)", ylab = "Densidade", xlab = "y")
+
+curve(dgamma(x, shape = alfa, scale = beta), 
+      col = "red", lwd = 2, add = TRUE) 
+
+```
+
+#Com base na distribuição da variável aleatória (v.a.) Y do exercício acima, implemente uma #função em R que gere observações de Y.
+
+```{r}
+
+generate_y <- function(n, alfa, beta) {
+  rgamma(n, shape = alfa, scale = beta)
+}
+
+y_samples <- generate_y(10000, 1, 3)
+
+
+hist(y_samples, prob = TRUE, breaks = 30, 
+     main = "Histograma de Y (alfa=1, beta=3)", 
+     xlab = "Y", ylab = "Densidade")
+```
+
+# Questaõ 3 juntamente com a questão [i] e [ii]
+
+### Gere X1, X2, . . . , Xn variáveis aleatórias, n = 10, 30, 500, 10000, das distribuições a seguir:
+
+-   Binomial(n, 0.6)
+-   Poisson(3)
+-   $χ^2$(6)
+-   F(5, 3)
+
+em seguida
+
+### [i.] Considere o TCL, ou seja, pegue as variáveis acima e verifique, com o qqplot(qqnorm) se de fato as variáveis acima convergem para a normal. Se sim, diga para qual normal(parâmetros) ocorre a convergência. Para responder sobre a convergência utilize apenas n = 10000 e diga se coincide com a teoria.
+
+### [ii.] Aplique um teste de ajuste (aderência) e conclua sobre o que afirma no item anterior.
+
+### Questão 3.a - Binomial(n, 0.6)
+
+```{r}
+vetor_n <- c(10, 30, 500, 10000)
+n_simulacoes <- 100000
+p <- 0.6
+
+par(mfrow = c(2, 2))
+
+for (n in vetor_n) {
+  variavel <- rbinom(n_simulacoes, size = n, prob = p)
+  stopifnot(!is.null(variavel), length(variavel) > 0, all(!is.na(variavel)))
+  
+  media <- n * p
+  desvio <- sqrt(n * p * (1 - p))
+  padronizado <- (variavel - media) / desvio
+  
+  if (any(is.na(padronizado))) {
+    warning(paste("NA encontrado para n =", n))
+    next
+  }
+  
+  qqnorm(padronizado, main = paste("Binomial - n =", n))
+  qqline(padronizado, col = "red")
+}
+dev.off()
+```
+
+### Questão 3.b - Poisson(3)
+
+```{r}
+lambda <- 3
+par(mfrow = c(2, 2))
+
+for (n in vetor_n) {
+  variavel <- rpois(n_simulacoes, lambda = lambda * n)
+  stopifnot(!is.null(variavel), length(variavel) > 0, all(!is.na(variavel)))
+  
+  media <- lambda * n
+  desvio <- sqrt(media)
+  padronizado <- (variavel - media) / desvio
+  if (any(is.na(padronizado))) {
+    warning(paste("NA encontrado para n =", n))
+    next
+  }
+  
+  qqnorm(padronizado, main = paste("Poisson - n =", n))
+  qqline(padronizado, col = "blue")
+}
+```
+
+### Questão 3.c - $χ^2$(6)
+
+```{r}
+set.seed(123)
+vetor_n <- c(10, 30, 500, 10000)
+n_simulacoes <- 100000
+df <- 6 
+
+par(mfrow = c(2, 2))
+
+for (n in vetor_n) {
+  variavel <- rchisq(n_simulacoes, df = df * n)
+  stopifnot(!is.null(variavel), length(variavel) > 0, all(!is.na(variavel)))
+  
+  media_teorica <- df * n
+  var_teorica <- 2 * df * n
+  padronizado <- (variavel - media_teorica) / sqrt(var_teorica)
+  if (any(is.na(padronizado))) {
+    warning(paste("NA encontrado para n =", n))
+    next
+  }
+  
+  qqnorm(padronizado, main = paste("Qui-Quadrado (k=", df, ") - n =", n))
+  qqline(padronizado, col = "red", lwd = 2)
+
+  teste <- ks.test(jitter(padronizado), "pnorm", mean = 0, sd = 1)
+  cat("Qui-Quadrado | n =", n, "| KS p-valor =", round(teste$p.value, 4),
+      "| Conclusão:", ifelse(teste$p.value > 0.05, "Normal", "Não-normal"), "\n")
+}
+dev.off()
+```
+
+### Questão 3.d - F(5, 3)
+
+
+```{r fsnedecor_fixed, fig.height=8, fig.width=8}
+set.seed(123)
+vetor_n <- c(10, 30, 500, 10000)
+n_simulacoes <- 100000
+df1 <- 5
+df2 <- 3
+
+par(mfrow = c(2, 2))
+
+for (n in vetor_n) {
+  variavel <- replicate(n_simulacoes, sum(rf(n, df1, df2)))
+  
+  media_teorica <- n * (df2 / (df2 - 2))
+  
+  if (df2 > 4) {
+    var_teorica <- n * (2 * df2^2 * (df1 + df2 - 2) / (df1 * (df2 - 2)^2 * (df2 - 4)))
+    padronizado <- (variavel - media_teorica) / sqrt(var_teorica)
+  } else {
+    
+    padronizado <- (variavel - mean(variavel)) / sd(variavel)
+  }
+  
+  qqnorm(padronizado, main = paste("F-Snedecor (", df1, ",", df2, ") - n =", n))
+  qqline(padronizado, col = "red", lwd = 2)
+  
+  teste <- ks.test(jitter(padronizado), "pnorm", mean = 0, sd = 1)
+  cat("F-Snedecor | n =", n, "| KS p-valor =", round(teste$p.value, 4),
+      "| Conclusão:", ifelse(teste$p.value > 0.05, "Normal", "Não-normal"), "\n")
+}
+
+dev.off()
+```
